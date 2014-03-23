@@ -8,9 +8,9 @@
  * @license    http://opensource.org/licenses/BSD-3-Clause
  */
 
-require 'config.php';
-require 'formstack.php';
-require 'moo.php';
+require_once 'config.php';
+require_once 'formstack.php';
+require_once 'moo.php';
 
 $formstack = new Formstack();
 

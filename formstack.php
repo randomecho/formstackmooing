@@ -55,14 +55,19 @@ class Formstack {
 	}
 
 	/**
-	 * Get details of a form created at Formstack
+	 * Get forms under account, or details of a specific form
 	 *
 	 * @param   integer  form id
 	 * @return  mixed
 	 */
-	public function get_form($formstack_form_id)
+	public function get_form($formstack_form_id = '')
 	{
-		$method = 'form/'.$formstack_form_id.'.json';
+		$method = 'form/';
+
+		if ($formstack_form_id != '')
+		{
+			$method .= $formstack_form_id.'.json';
+		}
 
 		return $this->connect($method);
 	}
@@ -93,4 +98,56 @@ class Formstack {
 		return $this->connect($method);
 	}
 
+	/**
+	 * Get names from a form submission
+	 *
+	 * @param   integer  form id
+	 * @return  mixed
+	 */
+	public function get_names($form_id)
+	{
+		$result = $this->get_submissions($form_id);
+
+		if (isset($_SESSION['attendees']))
+		{
+			unset($_SESSION['attendees']);
+		}
+
+		if (isset($result->total))
+		{
+			$_SESSION['submissions'] = $result->submissions;
+
+			foreach ($_SESSION['submissions'] as $info)
+			{
+				$form_data = $this->get_details($info->id);
+				$form_fields = $form_data->data;
+
+				foreach ($form_fields as $form_value)
+				{
+					// Sniff for field that captured the first name data
+					if (stripos($form_value->value, 'first') !== false)
+					{
+						$attendee = explode("\n", $form_value->value);
+						$first_name = trim(substr($attendee[0], strpos($attendee[0], '=') + 1));
+						$last_name = trim(substr($attendee[1], strpos($attendee[1], '=') + 1));
+
+						$_SESSION['attendees'][] = array('full' => $first_name.' '.$last_name,
+							'first_name' => $first_name,
+							'last_name' => $last_name,
+						);
+
+						// If there are other fields we do not need to stick around looking at them
+						break;
+					}
+				}
+			}
+
+			if (count($_SESSION['attendees']) > 0)
+			{
+				return $_SESSION['attendees'];
+			}
+		}
+
+		return false;
+	}
 }

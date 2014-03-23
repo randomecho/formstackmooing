@@ -45,6 +45,18 @@ table {
   border-spacing: 0;
 }
 
+th {
+  text-align: left;
+}
+
+th, td {
+  padding: 0.5em 1em 0.5em 0.3em;
+}
+
+tr:nth-child(2n) {
+  background: #f0f0f0;
+}
+
 .infobox {
   border: 1px solid #555;
   border-radius: 5px;
@@ -60,13 +72,74 @@ table {
 </head><body>
 
 <div class="infobox">
-<span id="people-count">0</span> people have registered
-<button id="check-register">Check for registrations</button>
+<?php
+
+require_once 'config.php';
+require_once 'formstack.php';
+
+$formstack = new Formstack();
+$forms = $formstack->get_form();
+
+if (isset($forms->forms))
+{
+	echo '<table>';
+	echo '<tr>';
+	echo '<th>Name</th>';
+	echo '<th>Submissions</th>';
+	echo '<th>Last submitted</th>';
+	echo '</tr>';
+
+	foreach ($forms->forms as $info)
+	{
+		echo '<tr>';
+		echo '<td><a href="./index.php?id='.$info->id.'">'.$info->name.'</a></td>';
+		echo '<td>'.$info->submissions.'</td>';
+		echo '<td>'.$info->last_submission_time.'</td>';
+		echo '<td><a href="'.$info->url.'">View form</a></td>';
+		echo '</tr>';
+	}
+
+	echo '</table>';
+}
+
+?>
 </div>
 
-<div id="namebox" class="infobox ghost">
-<button id="show-names">Show names</button>
+<?php
+
+if (isset($_GET['id']))
+{
+	$form_name = $formstack->get_form($_GET['id']);
+	$attendees = $formstack->get_names($_GET['id']);
+
+	if (isset($form_name->name))
+	{
+?>
+<div id="namebox" class="infobox">
+<h2><?php echo $form_name->name ?> attendees</h2>
+<?php
+		if ($attendees !== false)
+		{
+			echo '<ul>';
+
+			foreach ($attendees as $attendee)
+			{
+				echo '<li>'.$attendee['full'].'</li>';
+			}
+
+			echo '</ul>';
+		}
+		else
+		{
+			echo '<p>No attendees have yet registered.</p>';
+		}
+?>
 </div>
+<?php
+	}
+}
+
+?>
 
 <div id="imagebox" class="infobox">
 <form action="./index.php" method="post" enctype="multipart/form-data">
@@ -75,36 +148,4 @@ table {
 </form>
 </div>
 
-<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-<script>
-$(function(){
-  var moostack_uri = './formstackmoo.php';
-
-  // Call Formstack API to show how many submissions have been captured
-  $('#check-register').click(function(){
-    $('#check-register').text('Checking...');
-    $.get(moostack_uri, {get_count: 1}, function(data){
-      var count_registered = parseInt(data);
-      $('#check-register').text('Check for registrations');
-
-      // If we have registrations, offer to show names of those attending
-      if (count_registered > 0)
-      {
-        $('#people-count').text(count_registered);
-        $('#check-register').remove();
-        $('#namebox').fadeIn();
-      }
-    });
-  });
-
-  // Fetch and display list of attendees
-  $('#show-names').click(function(){
-    $('#namebox').text('Loading...');
-    $.get(moostack_uri, {get_names: 1}, function(data){
-      $('#namebox').html(data);
-    });
-  });
-
-});
-</script>
 </body></html>
