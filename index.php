@@ -1,3 +1,14 @@
+<?php
+require_once 'config.php';
+require_once 'formstack.php';
+
+if (trim($formstack_token) == '' || trim($moo_key) == '' || trim($moo_secret) == '')
+{
+	echo 'API keys and tokens in configuration have not been set. Fill them out before continuing.';
+	exit();
+}
+
+?>
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <title>Formstack Mooing</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -73,9 +84,6 @@ tr:nth-child(2n) {
 
 <div class="infobox">
 <?php
-
-require_once 'config.php';
-require_once 'formstack.php';
 
 $formstack = new Formstack();
 $forms = $formstack->get_form();
